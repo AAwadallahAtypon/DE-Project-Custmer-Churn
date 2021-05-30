@@ -1,7 +1,7 @@
 
 # Customer Churn Analysis
 
-# Run
+## Run
 ```sh
 $ docker-compose up
 ```
