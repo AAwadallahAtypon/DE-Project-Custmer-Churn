@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+ 
+  pgAdmin:
+    restart: always
+    image: dpage/pgadmin4
+    container_name: "dev-pgadmin"
+    ports:
+      - "8089:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: de@psut.com
+      PGADMIN_DEFAULT_PASSWORD: 1234
+    volumes:
+      - ./sharedVol:/home/sharedVol
+
+
+  postgres_storage:
+    restart: always
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: de_proj
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: csv_db
+    volumes:
+      - ./pgvol:/var/lib/postgresql/data
+      - ./sharedVol:/home/sharedVol
+
+
+  datascience-notebook:
+    image:  jupyter/minimal-notebook
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./sharedVol:/home/sharedVol
+
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN : "psut2021"
+
+    ports:
+      - "8886:8888"
+
+    container_name:   ds-jupyter11
+
+    links:
+      - postgres_storage
+
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - ./esdata1:/usr/share/elasticsearch/data
+      - ./sharedVol:/home/sharedVol
+    ports:
+      - 9200:9200
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    links:
+      - elasticsearch
+    ports:
+      - 5601:5601
+    volumes:
+    - ./sharedVol:/home/sharedVol
+
+
